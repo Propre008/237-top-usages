@@ -1,0 +1,47 @@
+name: Autopilot 237 - Publication Quotidienne Automatique
+
+on:
+  schedule:
+    # Tous les jours a 06:00 UTC (07:00 heure de Douala/Yaounde) et 17:00 UTC (18:00 heure de Douala)
+    - cron: '0 6,17 * * *'
+  workflow_dispatch: # Permet egalement de declencher manuellement depuis l'interface GitHub
+
+jobs:
+  autopilot:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Recuperer le code source
+        uses: actions/checkout@v4
+
+      - name: Configurer Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+
+      - name: Installer les dependances
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r content_pipeline/requirements.txt requests
+
+      - name: Executer l'Autopilot 237
+        env:
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          GEMINI_MODEL: 'gemini-3.6-flash'
+        run: |
+          cd content_pipeline
+          python autopilot.py --run-once --count 2
+
+      - name: Commit et Push des nouveaux articles
+        run: |
+          git config --global user.name "Autopilot 237 Bot"
+          git config --global user.email "bot@237topusages.cm"
+          git add 237-top-usages/content/articles/ content_pipeline/data/history.json
+          git status
+          if ! git diff --cached --quiet; then
+            git commit -m "feat(content): actualites et tendances automatiques du jour [skip ci]"
+            git push
+          else
+            echo "Aucun nouvel article a publier ce cycle."
+          fi

@@ -1,0 +1,24 @@
+# Dépendances Node et builds
+**/node_modules/
+**/.next/
+**/.vercel/
+**/build/
+**/dist/
+
+# Environnements et caches Python
+**/__pycache__/
+**/*.pyc
+**/*.pyo
+**/.venv/
+**/venv/
+
+# Fichiers secrets et clés API (Sécurité)
+**/.env
+**/.env.local
+**/.env.*.local
+!**/.env.example
+
+# Logs et temporaires
+**/*.log
+.DS_Store
+Thumbs.db
