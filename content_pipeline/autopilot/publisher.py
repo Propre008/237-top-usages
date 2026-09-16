@@ -73,6 +73,8 @@ def publish_article(content: str, candidate: dict) -> tuple[str, str]:
         "category": category,
         "theme": candidate.get("theme", ""),
         "source": candidate.get("source", ""),
+        "source_url": candidate.get("link", ""),
+        "cover_image": candidate.get("cover_image", ""),
         "published_at": datetime.now().isoformat(),
         "site_path": site_path,
     }

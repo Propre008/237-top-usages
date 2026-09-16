@@ -95,6 +95,61 @@ def parse_item_title(raw_title: str) -> tuple[str, str]:
     return raw_title.strip(), "Média 237"
 
 
+CATEGORY_DEFAULTS = {
+    "tech": "/images/defaults/tech.jpg",
+    "business": "/images/defaults/business.jpg",
+    "energie": "/images/defaults/energie.jpg",
+    "sport": "/images/defaults/sport.jpg",
+    "football": "/images/defaults/sport.jpg",
+    "actualites": "/images/defaults/actualites.jpg",
+    "societe": "/images/defaults/actualites.jpg",
+    "top-usages": "/images/defaults/tech.jpg",
+    "problemes-solutions": "/images/defaults/energie.jpg",
+    "tendances": "/images/defaults/business.jpg",
+}
+
+
+def resolve_card_metadata(article_url: str, category: str, fallback_source: str = "Actualités 237") -> dict:
+    """Extrait l'image officielle (og:image) et résout l'URL source avec timeout strict de 2s
+
+    et bascule instantanée vers l'image locale garantie.
+    """
+    default_img = CATEGORY_DEFAULTS.get(category.lower(), "/images/defaults/actualites.jpg")
+    meta = {
+        "cover_image": default_img,
+        "source_name": fallback_source,
+        "source_url": article_url,
+    }
+
+    try:
+        req = urllib.request.Request(
+            article_url,
+            headers={
+                "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36"
+            },
+        )
+        with urllib.request.urlopen(req, timeout=2.0) as resp:
+            final_url = resp.geturl()
+            meta["source_url"] = final_url
+
+            domain = urllib.parse.urlparse(final_url).netloc.replace("www.", "")
+            if domain and "google" not in domain:
+                meta["source_name"] = domain.split(".")[0].capitalize()
+
+            chunk = resp.read(32768).decode("utf-8", errors="ignore")
+            from bs4 import BeautifulSoup
+
+            soup = BeautifulSoup(chunk, "html.parser")
+            og = soup.find("meta", property="og:image") or soup.find("meta", attrs={"name": "twitter:image"})
+            if og and og.get("content") and og["content"].strip().startswith("http"):
+                meta["cover_image"] = og["content"].strip()
+    except Exception:
+        # Bascule silencieuse instantanée sur les images locales garanties
+        pass
+
+    return meta
+
+
 def fetch_theme_news(theme_key: str, limit: int = 10) -> list[dict]:
     """Récupère les actualités fraîches pour un thème donné."""
     if theme_key not in THEMES:
@@ -140,10 +195,14 @@ def fetch_theme_news(theme_key: str, limit: int = 10) -> list[dict]:
             if is_already_processed(clean_title, link, history):
                 continue
 
+            # Résolution visuelle ultra-rapide (image + source)
+            card_meta = resolve_card_metadata(link, theme_key, fallback_source=source)
+
             candidates.append({
                 "title": clean_title,
-                "source": source,
-                "link": link,
+                "source": card_meta["source_name"],
+                "link": card_meta["source_url"],
+                "cover_image": card_meta["cover_image"],
                 "pub_date": pub_date,
                 "theme": theme_key,
                 "category_hint": theme_cfg["default_category"],

@@ -33,6 +33,9 @@ title: "[Titre percutant et informatif, max 80 caractères]"
 slug: "[slug-en-minuscules-avec-tirets-sans-accents-ni-caracteres-speciaux]"
 category: "{CATEGORY_HINT}"
 date: "{DATE}"
+cover_image: "{COVER_IMAGE}"
+source_name: "{SOURCE}"
+source_url: "{SOURCE_URL}"
 tags: ["cameroun", "{THEME}", "tag3", "tag4"]
 ---
 
@@ -50,6 +53,8 @@ def generate_article_from_news(candidate: dict) -> str:
     """Génère un article de presse complet ancré au Cameroun à partir d'un sujet d'actualité."""
     title = candidate.get("title", "")
     source = candidate.get("source", "Sources locales")
+    source_url = candidate.get("link", "")
+    cover_image = candidate.get("cover_image", "/images/defaults/actualites.jpg")
     theme = candidate.get("theme", "actualites")
     category_hint = candidate.get("category_hint", "actualites")
     snippet = candidate.get("snippet", "")
@@ -59,6 +64,8 @@ def generate_article_from_news(candidate: dict) -> str:
         PROMPT_TEMPLATE
         .replace("{TITLE}", title)
         .replace("{SOURCE}", source)
+        .replace("{SOURCE_URL}", source_url)
+        .replace("{COVER_IMAGE}", cover_image)
         .replace("{THEME}", theme)
         .replace("{CATEGORY_HINT}", category_hint)
         .replace("{SNIPPET}", snippet if snippet else "Actualité du jour au Cameroun")
