@@ -1,14 +1,7 @@
 import ArticleCard from "./ArticleCard";
+import { PostMeta } from "@/lib/posts";
 
-type Post = {
-  slug: string;
-  title: string;
-  date: string;
-  category: string;
-  excerpt?: string;
-};
-
-export default function ArticleList({ posts }: { posts: Post[] }) {
+export default function ArticleList({ posts }: { posts: (PostMeta | any)[] }) {
   if (posts.length === 0) {
     return (
       <div className="text-center py-16">
@@ -23,8 +16,17 @@ export default function ArticleList({ posts }: { posts: Post[] }) {
     );
   }
 
+  // Équilibre visuel : si un seul article est présent (évite le trou blanc latéral)
+  if (posts.length === 1) {
+    return (
+      <div className="max-w-xl">
+        <ArticleCard post={posts[0]} />
+      </div>
+    );
+  }
+
   return (
-    <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+    <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
       {posts.map((p) => (
         <ArticleCard key={p.slug} post={p} />
       ))}
