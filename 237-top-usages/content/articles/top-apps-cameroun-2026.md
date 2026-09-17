@@ -3,6 +3,7 @@ title: "Top 5 des apps les plus utilisées au Cameroun en 2026"
 slug: "top-apps-cameroun-2026"
 category: "top-usages"
 date: "2026-07-17"
+cover_image: "/images/articles/top-apps.jpg"
 tags: ["apps", "Cameroun", "tendances", "numérique"]
 ---
 

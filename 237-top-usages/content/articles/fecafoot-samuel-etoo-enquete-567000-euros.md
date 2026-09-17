@@ -3,6 +3,7 @@ title: "Fécafoot : Samuel Eto’o visé par une demande d'enquête sur 567 000 
 slug: "fecafoot-samuel-etoo-enquete-567000-euros"
 category: "actualites"
 date: "2026-09-16"
+cover_image: "/images/articles/fecafoot-enquete.jpg"
 tags: ["cameroun", "football", "fecafoot", "samuel-etoo"]
 ---
 

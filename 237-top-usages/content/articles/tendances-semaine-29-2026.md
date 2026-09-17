@@ -3,6 +3,7 @@ title: "Tendances de la semaine 29 — Juillet 2026"
 slug: "tendances-semaine-29-2026"
 category: "tendances"
 date: "2026-07-14"
+cover_image: "/images/articles/tendances-tech.jpg"
 tags: ["tendances", "Cameroun", "tech", "business", "semaine"]
 ---
 

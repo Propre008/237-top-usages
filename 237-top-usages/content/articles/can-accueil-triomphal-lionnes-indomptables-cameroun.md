@@ -3,7 +3,7 @@ title: "CAN : L'accueil triomphal des Lionnes Indomptables enflamme le Cameroun"
 slug: "can-accueil-triomphal-lionnes-indomptables-cameroun"
 category: "actualites"
 date: "2026-09-17"
-cover_image: "/images/defaults/sport.jpg"
+cover_image: "/images/articles/lionnes-accueil.jpg"
 source_name: "lemonde.fr"
 source_url: "https://news.google.com/rss/articles/CBMi2wFBVV95cUxPWWJSaGJnQzc0QTFGTkRhcmVON3lMTXlkUmZ1RW1oamhkazF3SE5xYjVHUXNCcTFxVXE2bXJjT2RISmQ2UlNIU3NYN3FhaVlIVVhqMWZGbjZuWnZuYW1kVHhYenhGQkZ5blp1U2FXV1lZa2tlQllRNHJmQXg0Z01YYUFjUjR5SjhKTXVXRFhJWVpKVVNZbmNoMTNPNjdWSTkxNzBrcnJmOXc0c0xLUzJBQWR3QVBSenFnMHlwbm10WUd4YW94MjlvckVmdVVzcHpISzl6VXpLUVV3Wk0?oc=5"
 tags: ["cameroun", "football", "lionnes indomptables", "can"]

@@ -3,6 +3,7 @@ title: "Arthur Avom Ebong chez les Lions : La jeunesse prend les commandes"
 slug: "arthur-avom-ebong-convoque-chez-les-lions-can-2027"
 category: "actualites"
 date: "2026-09-16"
+cover_image: "/images/articles/arthur-avom.jpg"
 tags: ["cameroun", "football", "lions indomptables", "can 2027"]
 ---
 

@@ -3,6 +3,7 @@ title: "MTN et Orange convoqués par le régulateur : vers la fin du laisser-all
 slug: "mtn-et-orange-convoques-par-le-regulateur-vers-la-fin-du-laisser-aller"
 category: "top-usages"
 date: "2026-09-16"
+cover_image: "/images/articles/telecom-regulateur.jpg"
 tags: ["cameroun", "tech", "telecoms", "mobile-money"]
 ---
 

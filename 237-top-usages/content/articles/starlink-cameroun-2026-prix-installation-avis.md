@@ -3,6 +3,7 @@ title: "Starlink au Cameroun en 2026 : Prix, installation et avis du terrain"
 slug: "starlink-cameroun-2026-prix-installation-avis"
 category: "tendances"
 date: "2026-09-16"
+cover_image: "/images/articles/starlink.jpg"
 tags: ["starlink", "internet-cameroun", "business-douala", "tech-afrique"]
 ---
 

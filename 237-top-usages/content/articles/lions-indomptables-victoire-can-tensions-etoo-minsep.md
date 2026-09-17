@@ -3,6 +3,7 @@ title: "Lions Indomptables : la victoire à la CAN ravive la guerre Eto'o - Mins
 slug: "lions-indomptables-victoire-can-tensions-etoo-minsep"
 category: "actualites"
 date: "2026-09-16"
+cover_image: "/images/articles/fecafoot-press.jpg"
 tags: ["cameroun", "football", "fecafoot", "minsep"]
 ---
 

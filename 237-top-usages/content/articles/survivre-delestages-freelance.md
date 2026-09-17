@@ -3,6 +3,7 @@ title: "Survivre aux délestages quand tu es freelance au Cameroun"
 slug: "survivre-delestages-freelance"
 category: "problemes-solutions"
 date: "2026-07-15"
+cover_image: "/images/articles/delestages-freelance.jpg"
 tags: ["énergie", "freelance", "délestages", "productivité", "Cameroun"]
 ---
 
