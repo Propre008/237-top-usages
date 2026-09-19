@@ -4,10 +4,8 @@ import { useEffect, useState } from "react";
 
 export default function ThemeToggle() {
   const [isDark, setIsDark] = useState(false);
-  const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
-    setMounted(true);
     const saved = localStorage.getItem("theme");
     const prefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
     if (saved === "dark" || (!saved && prefersDark)) {
@@ -31,23 +29,18 @@ export default function ThemeToggle() {
     }
   };
 
-  if (!mounted) {
-    return (
-      <div className="w-8 h-8 rounded-lg border border-gray-200/50 opacity-0" />
-    );
-  }
-
   return (
     <button
       onClick={toggleTheme}
-      className="relative p-2 rounded-xl border border-gray-200/80 hover:border-gray-300 dark:border-slate-800 dark:hover:border-slate-700 bg-white/70 dark:bg-slate-900/80 text-gray-700 dark:text-gray-200 transition-all duration-300 hover:scale-105 active:scale-95 shadow-sm"
+      type="button"
+      className="p-2 rounded-xl border border-gray-200/90 dark:border-slate-800 bg-gray-50/80 hover:bg-gray-100 dark:bg-slate-900 dark:hover:bg-slate-800 text-gray-700 dark:text-gray-200 transition-all duration-200 shadow-sm flex items-center justify-center cursor-pointer"
       aria-label={isDark ? "Passer au thème clair" : "Passer au thème sombre"}
-      title={isDark ? "Thème clair" : "Thème sombre"}
+      title={isDark ? "Mode sombre actif (cliquer pour mode clair ☀️)" : "Mode clair actif (cliquer pour mode sombre 🌙)"}
     >
       {isDark ? (
-        // Icône Soleil pour repasser en clair
+        // Icône Soleil dorée pour repasser en mode clair
         <svg
-          className="w-4 h-4 text-amber-400 transition-transform duration-300 rotate-0 hover:rotate-90"
+          className="w-4 h-4 text-amber-400"
           fill="none"
           viewBox="0 0 24 24"
           strokeWidth={2}
@@ -60,9 +53,9 @@ export default function ThemeToggle() {
           />
         </svg>
       ) : (
-        // Icône Lune pour passer en sombre
+        // Icône Lune pour passer en mode sombre
         <svg
-          className="w-4 h-4 text-slate-700 hover:text-indigo-600 transition-transform duration-300 -rotate-12 hover:rotate-0"
+          className="w-4 h-4 text-slate-700"
           fill="none"
           viewBox="0 0 24 24"
           strokeWidth={2}

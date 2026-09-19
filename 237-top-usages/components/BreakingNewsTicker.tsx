@@ -11,10 +11,33 @@ interface NewsItem {
   imageUrl?: string;
 }
 
+const DEFAULT_NEWS: NewsItem[] = [
+  {
+    title: "Lions Indomptables : Marc Brys affine sa liste pour les éliminatoires de la CAN",
+    source: "Camfoot",
+    url: "https://www.camfoot.com",
+    timeAgo: "Il y a 25 min",
+    category: "Sport",
+  },
+  {
+    title: "Télécoms au Cameroun : L'ART intensifie les contrôles sur la qualité de service 4G",
+    source: "Actu Cameroun",
+    url: "https://actucameroun.com",
+    timeAgo: "Il y a 45 min",
+    category: "Tech & Éco",
+  },
+  {
+    title: "Énergie & solaire : Les PME camerounaises adoptent des solutions hybrides face aux délestages",
+    source: "Africanews",
+    url: "https://fr.africanews.com",
+    timeAgo: "Il y a 1 h",
+    category: "Économie",
+  },
+];
+
 export default function BreakingNewsTicker() {
-  const [news, setNews] = useState<NewsItem[]>([]);
+  const [news, setNews] = useState<NewsItem[]>(DEFAULT_NEWS);
   const [currentIndex, setCurrentIndex] = useState(0);
-  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     async function loadNews() {
@@ -27,9 +50,7 @@ export default function BreakingNewsTicker() {
           }
         }
       } catch {
-        // En cas d'erreur de réseau, maintien silencieux
-      } finally {
-        setLoading(false);
+        // En cas d'erreur de réseau, maintien des dépêches par défaut
       }
     }
     loadNews();
@@ -43,14 +64,6 @@ export default function BreakingNewsTicker() {
     }, 6000);
     return () => clearInterval(interval);
   }, [news.length]);
-
-  if (loading && news.length === 0) {
-    return (
-      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 mt-4">
-        <div className="h-11 rounded-xl bg-gray-100 dark:bg-slate-900 animate-pulse" />
-      </div>
-    );
-  }
 
   if (news.length === 0) return null;
 
