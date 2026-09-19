@@ -4,6 +4,7 @@ import re
 import html
 import xml.etree.ElementTree as ET
 import urllib.parse
+import urllib.request
 from datetime import datetime
 import requests
 
@@ -12,33 +13,96 @@ HISTORY_FILE = os.path.join(DATA_DIR, "history.json")
 
 os.makedirs(DATA_DIR, exist_ok=True)
 
-# Définition des piliers éditoriaux et requêtes de recherche ciblées Cameroun
+# Piliers éditoriaux étendus : Cameroun & Afrique (Style MSN / Google News)
 THEMES = {
     "football": {
-        "query": "Cameroun (football OR Lions Indomptables OR Fecafoot OR Eto'o OR Marc Brys OR CAN)",
+        "query": "(Cameroun OR Afrique) (football OR Lions Indomptables OR Fecafoot OR Eto'o OR CAN OR CAF)",
         "default_category": "actualites",
-        "description": "Football, Lions Indomptables et sport national",
+        "description": "Football, Lions Indomptables et sport continental",
     },
     "tech": {
-        "query": "Cameroun (internet OR telecom OR MTN OR Orange OR Camtel OR Starlink OR fibre OR forfait)",
+        "query": "(Cameroun OR Afrique) (internet OR telecom OR MTN OR Orange OR Camtel OR Starlink OR fintech OR IA)",
         "default_category": "top-usages",
-        "description": "Internet, télécoms, data et technologies",
+        "description": "Internet, télécoms, data et innovation numérique",
     },
     "energie": {
-        "query": "Cameroun (ENEO OR electricite OR delestage OR coupure OR solaire OR onduleur)",
+        "query": "(Cameroun OR Afrique) (ENEO OR electricite OR delestage OR solaire OR energie renouvelable)",
         "default_category": "problemes-solutions",
         "description": "Énergie, délestages, solaire et solutions concrètes",
     },
     "business": {
-        "query": "Cameroun (mobile money OR MoMo OR Orange Money OR startup OR investissement OR commerce)",
+        "query": "(Cameroun OR Afrique) (mobile money OR MoMo OR startup OR investissement OR franc CFA OR PME)",
         "default_category": "tendances",
-        "description": "Business, paiements mobiles, freelancing et investissement",
+        "description": "Business, paiements mobiles, économie et investissements",
     },
     "societe": {
-        "query": "Cameroun (Douala OR Yaounde OR societe OR economie OR transport)",
+        "query": "(Cameroun OR Douala OR Yaounde OR Afrique centrale) (societe OR economie OR transport OR vie)",
         "default_category": "actualites",
-        "description": "Actualités de société et faits marquants",
+        "description": "Actualités de société, faits marquants et vie urbaine",
     },
+}
+
+# Flux RSS directs de grands médias fiables (vraies photos de presse garanties)
+DIRECT_FEEDS = [
+    {
+        "name": "Africanews",
+        "url": "https://fr.africanews.com/feed/",
+        "theme": "societe",
+        "category": "actualites",
+        "source": "Africanews",
+    },
+    {
+        "name": "Camfoot",
+        "url": "https://www.camfoot.com/feed/",
+        "theme": "football",
+        "category": "actualites",
+        "source": "Camfoot",
+    },
+    {
+        "name": "Actu Cameroun",
+        "url": "https://actucameroun.com/feed/",
+        "theme": "societe",
+        "category": "actualites",
+        "source": "Actu Cameroun",
+    },
+    {
+        "name": "Agence Ecofin",
+        "url": "https://www.agenceecofin.com/a-la-une/rss",
+        "theme": "business",
+        "category": "tendances",
+        "source": "Agence Ecofin",
+    },
+]
+
+# Pool de secours haute définition sans répétition
+THEMED_IMAGE_POOLS = {
+    "football": [
+        "/images/articles/arthur-avom.jpg",
+        "/images/articles/lionnes-accueil.jpg",
+        "/images/articles/fecafoot-press.jpg",
+        "/images/articles/fecafoot-enquete.jpg",
+        "/images/defaults/sport.jpg",
+    ],
+    "tech": [
+        "/images/articles/starlink.jpg",
+        "/images/articles/telecom-regulateur.jpg",
+        "/images/articles/top-apps.jpg",
+        "/images/defaults/tech.jpg",
+    ],
+    "energie": [
+        "/images/articles/delestages-freelance.jpg",
+        "/images/defaults/energie.jpg",
+    ],
+    "business": [
+        "/images/articles/tendances-tech.jpg",
+        "/images/articles/top-apps.jpg",
+        "/images/defaults/business.jpg",
+    ],
+    "societe": [
+        "/images/articles/telecom-regulateur.jpg",
+        "/images/articles/lionnes-accueil.jpg",
+        "/images/defaults/actualites.jpg",
+    ],
 }
 
 
@@ -75,7 +139,7 @@ def normalize_title(title: str) -> str:
     """Normalise un titre pour comparaison."""
     t = title.lower()
     t = re.sub(r"[^\w\s]", "", t)
-    return " ".join(t.split()[:8])  # Les 8 premiers mots signifiants
+    return " ".join(t.split()[:8])
 
 
 def clean_html(raw_html: str) -> str:
@@ -95,77 +159,53 @@ def parse_item_title(raw_title: str) -> tuple[str, str]:
     return raw_title.strip(), "Média 237"
 
 
-CATEGORY_DEFAULTS = {
-    "tech": "/images/defaults/tech.jpg",
-    "business": "/images/defaults/business.jpg",
-    "energie": "/images/defaults/energie.jpg",
-    "sport": "/images/defaults/sport.jpg",
-    "football": "/images/defaults/sport.jpg",
-    "actualites": "/images/defaults/actualites.jpg",
-    "societe": "/images/defaults/actualites.jpg",
-    "top-usages": "/images/defaults/tech.jpg",
-    "problemes-solutions": "/images/defaults/energie.jpg",
-    "tendances": "/images/defaults/business.jpg",
-}
+def extract_press_image_from_xml(item_el) -> str | None:
+    """Extrait directement la vraie photo de presse du flux XML (enclosure, media, img)."""
+    # 1. Enclosure (ex: Africanews, RFI, etc.)
+    enc = item_el.find("enclosure")
+    if enc is not None:
+        url = enc.get("url")
+        enc_type = enc.get("type", "image")
+        if url and ("image" in enc_type or url.lower().endswith((".jpg", ".jpeg", ".png", ".webp"))):
+            return url.strip()
+
+    # 2. Media content ou media thumbnail (Yahoo Media RSS)
+    for child in item_el:
+        tag_lower = child.tag.lower()
+        if "content" in tag_lower or "thumbnail" in tag_lower:
+            url = child.get("url")
+            if url and url.startswith("http"):
+                return url.strip()
+
+    # 3. Balise <img> dans description ou content:encoded
+    for tag_name in ["description", "{http://purl.org/rss/1.0/modules/content/}encoded"]:
+        el = item_el.find(tag_name)
+        if el is not None and el.text:
+            m = re.search(r'<img[^>]+src=["\'](https?://[^"\']+)["\']', el.text, re.IGNORECASE)
+            if m:
+                img_url = m.group(1)
+                if not any(x in img_url.lower() for x in ["gravatar", "tracker", "pixel", "1x1"]):
+                    return img_url.strip()
+
+    return None
 
 
-def resolve_card_metadata(article_url: str, category: str, fallback_source: str = "Actualités 237") -> dict:
-    """Extrait l'image officielle (og:image) et résout l'URL source avec timeout strict de 2s
-
-    et bascule instantanée vers l'image locale garantie.
-    """
-    default_img = CATEGORY_DEFAULTS.get(category.lower(), "/images/defaults/actualites.jpg")
-    meta = {
-        "cover_image": default_img,
-        "source_name": fallback_source,
-        "source_url": article_url,
-    }
-
-    try:
-        req = urllib.request.Request(
-            article_url,
-            headers={
-                "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36"
-            },
-        )
-        with urllib.request.urlopen(req, timeout=2.0) as resp:
-            final_url = resp.geturl()
-            meta["source_url"] = final_url
-
-            domain = urllib.parse.urlparse(final_url).netloc.replace("www.", "")
-            if domain and "google" not in domain:
-                meta["source_name"] = domain.split(".")[0].capitalize()
-
-            chunk = resp.read(32768).decode("utf-8", errors="ignore")
-            from bs4 import BeautifulSoup
-
-            soup = BeautifulSoup(chunk, "html.parser")
-            og = soup.find("meta", property="og:image") or soup.find("meta", attrs={"name": "twitter:image"})
-            if og and og.get("content") and og["content"].strip().startswith("http"):
-                meta["cover_image"] = og["content"].strip()
-    except Exception:
-        # Bascule silencieuse instantanée sur les images locales garanties
-        pass
-
-    return meta
+def get_fallback_image(theme: str) -> str:
+    """Retourne une image locale de qualité supérieure sans répétition."""
+    pool = THEMED_IMAGE_POOLS.get(theme, THEMED_IMAGE_POOLS["societe"])
+    # Rotation pseudo-aléatoire basée sur l'heure actuelle
+    idx = int(datetime.now().timestamp()) % len(pool)
+    return pool[idx]
 
 
-def fetch_theme_news(theme_key: str, limit: int = 10) -> list[dict]:
-    """Récupère les actualités fraîches pour un thème donné."""
-    if theme_key not in THEMES:
-        return []
-
-    theme_cfg = THEMES[theme_key]
-    query = theme_cfg["query"]
-    encoded_query = urllib.parse.quote(query)
-    rss_url = f"https://news.google.com/rss/search?q={encoded_query}&hl=fr&gl=CM&ceid=CM:fr"
-
+def fetch_direct_feed(feed_cfg: dict, limit: int = 3) -> list[dict]:
+    """Récupère les actualités fraîches depuis un flux RSS direct fiable avec vraie photo."""
     headers = {
-        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36"
     }
 
     try:
-        resp = requests.get(rss_url, headers=headers, timeout=12)
+        resp = requests.get(feed_cfg["url"], headers=headers, timeout=6)
         if resp.status_code != 200:
             return []
 
@@ -183,9 +223,74 @@ def fetch_theme_news(theme_key: str, limit: int = 10) -> list[dict]:
             if title_el is None or link_el is None:
                 continue
 
-            raw_title = title_el.text or ""
-            link = link_el.text or ""
-            clean_title, source = parse_item_title(raw_title)
+            raw_title = clean_html(title_el.text or "")
+            link = (link_el.text or "").strip()
+            pub_date = pub_date_el.text if pub_date_el is not None else ""
+            snippet = clean_html(desc_el.text or "") if desc_el is not None else ""
+
+            if not raw_title or len(raw_title) < 15:
+                continue
+
+            if is_already_processed(raw_title, link, history):
+                continue
+
+            # Extraction de la vraie photo de presse
+            press_image = extract_press_image_from_xml(it)
+            if not press_image:
+                press_image = get_fallback_image(feed_cfg["theme"])
+
+            candidates.append({
+                "title": raw_title,
+                "source": feed_cfg["source"],
+                "link": link,
+                "cover_image": press_image,
+                "pub_date": pub_date,
+                "theme": feed_cfg["theme"],
+                "category_hint": feed_cfg["category"],
+                "snippet": snippet,
+                "is_direct_press_photo": bool(press_image and press_image.startswith("http")),
+            })
+
+        return candidates
+    except Exception as e:
+        print(f"[!] Erreur sur le flux direct {feed_cfg['name']}: {e}")
+        return []
+
+
+def fetch_google_news_theme(theme_key: str, limit: int = 5) -> list[dict]:
+    """Récupère les actualités ciblées via Google News Cameroun & Afrique."""
+    if theme_key not in THEMES:
+        return []
+
+    theme_cfg = THEMES[theme_key]
+    encoded_query = urllib.parse.quote(theme_cfg["query"])
+    rss_url = f"https://news.google.com/rss/search?q={encoded_query}&hl=fr&gl=CM&ceid=CM:fr"
+
+    headers = {
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36"
+    }
+
+    try:
+        resp = requests.get(rss_url, headers=headers, timeout=8)
+        if resp.status_code != 200:
+            return []
+
+        root = ET.fromstring(resp.content)
+        items = root.findall(".//item")
+        history = load_history()
+        candidates = []
+
+        for it in items[:limit]:
+            title_el = it.find("title")
+            link_el = it.find("link")
+            pub_date_el = it.find("pubDate")
+            desc_el = it.find("description")
+
+            if title_el is None or link_el is None:
+                continue
+
+            clean_title, source = parse_item_title(title_el.text or "")
+            link = (link_el.text or "").strip()
             pub_date = pub_date_el.text if pub_date_el is not None else ""
             snippet = clean_html(desc_el.text or "") if desc_el is not None else ""
 
@@ -195,64 +300,72 @@ def fetch_theme_news(theme_key: str, limit: int = 10) -> list[dict]:
             if is_already_processed(clean_title, link, history):
                 continue
 
-            # Résolution visuelle ultra-rapide (image + source)
-            card_meta = resolve_card_metadata(link, theme_key, fallback_source=source)
+            # Recherche d'image ou fallback de haute qualité sans répétition
+            press_image = extract_press_image_from_xml(it) or get_fallback_image(theme_key)
 
             candidates.append({
                 "title": clean_title,
-                "source": card_meta["source_name"],
-                "link": card_meta["source_url"],
-                "cover_image": card_meta["cover_image"],
+                "source": source,
+                "link": link,
+                "cover_image": press_image,
                 "pub_date": pub_date,
                 "theme": theme_key,
                 "category_hint": theme_cfg["default_category"],
                 "snippet": snippet,
+                "is_direct_press_photo": bool(press_image and press_image.startswith("http")),
             })
 
         return candidates
-
     except Exception as e:
-        print(f"[!] Erreur de recuperation ({theme_key}): {e}")
+        print(f"[!] Erreur Google News ({theme_key}): {e}")
         return []
 
 
 def get_fresh_candidates(theme: str | None = None, max_candidates: int = 5) -> list[dict]:
-    """Parcourt les thèmes et retourne une sélection équilibrée (round-robin)
-    pour varier les sujets entre Tech, Football, Énergie, Business et Société.
+    """Agrège les flux directs fiables (avec vraies photos de presse)
+    et complète avec les flux thématiques Google News (Cameroun & Afrique).
     """
-    themes_to_check = [theme] if theme and theme in THEMES else list(THEMES.keys())
-    theme_candidates = {}
-
-    for t in themes_to_check:
-        news = fetch_theme_news(t, limit=4)
-        if news:
-            theme_candidates[t] = news
-
-    # Distribution équilibrée (round-robin entre les thèmes)
     selected = []
     seen_titles = set()
-    idx = 0
 
-    while len(selected) < max_candidates and any(theme_candidates.values()):
-        for t in list(theme_candidates.keys()):
+    # 1. Priorité aux flux RSS directs de presse avec photos officielles
+    for feed in DIRECT_FEEDS:
+        if len(selected) >= max_candidates:
+            break
+        if theme and feed["theme"] != theme:
+            continue
+        direct_items = fetch_direct_feed(feed, limit=2)
+        for it in direct_items:
+            norm = normalize_title(it["title"])
+            if norm not in seen_titles:
+                seen_titles.add(norm)
+                selected.append(it)
+                if len(selected) >= max_candidates:
+                    break
+
+    # 2. Complément avec les requêtes ciblées si nécessaire
+    if len(selected) < max_candidates:
+        themes_to_check = [theme] if theme and theme in THEMES else list(THEMES.keys())
+        for t in themes_to_check:
             if len(selected) >= max_candidates:
                 break
-            items = theme_candidates[t]
-            if items:
-                item = items.pop(0)
-                norm = normalize_title(item["title"])
+            theme_items = fetch_google_news_theme(t, limit=2)
+            for it in theme_items:
+                norm = normalize_title(it["title"])
                 if norm not in seen_titles:
                     seen_titles.add(norm)
-                    selected.append(item)
-            else:
-                del theme_candidates[t]
+                    selected.append(it)
+                    if len(selected) >= max_candidates:
+                        break
 
     return selected[:max_candidates]
 
 
 if __name__ == "__main__":
-    print("[*] Test du module de curation 237...")
+    print("[*] Test du module de curation Cameroun & Afrique...")
     items = get_fresh_candidates(max_candidates=5)
-    print(f"[*] {len(items)} sujets frais trouves :")
+    print(f"[*] {len(items)} sujets frais identifiés :")
     for i, it in enumerate(items, 1):
-        print(f"  {i}. [{it['theme'].upper()}] {it['title']} ({it['source']})")
+        photo_type = "Photo de presse" if it.get("is_direct_press_photo") else "Visuel thématique"
+        print(f"  {i}. [{it['theme'].upper()}] {it['title']}")
+        print(f"     Source : {it['source']} | Image ({photo_type}) : {it['cover_image'][:65]}")

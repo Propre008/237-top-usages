@@ -1,16 +1,20 @@
 import ArticleList from "@/components/ArticleList";
-import { getSortedPosts } from "@/lib/posts";
+import BreakingNewsTicker from "@/components/BreakingNewsTicker";
+import { getSortedPosts, getFeaturedPosts } from "@/lib/posts";
 import Link from "next/link";
 
 export default function Home() {
   const allPosts = getSortedPosts();
-  // 6 derniers articles pour le flux
+  // Articles à la une sélectionnés automatiquement par pertinence et équilibre thématique
+  const featuredPosts = getFeaturedPosts(3);
+  // Flux des derniers articles
   const latestPosts = allPosts.slice(0, 6);
-  // Articles à la une (les 3 premiers)
-  const featuredPosts = allPosts.slice(0, 3);
 
   return (
-    <div className="space-y-16 pb-16">
+    <div className="space-y-12 pb-16">
+      {/* ===== BANDEAU FLASH INFO EN DIRECT 24/7 (STYLE MSN / GOOGLE NEWS) ===== */}
+      <BreakingNewsTicker />
+
       {/* ===== HERO SECTION ===== */}
       <section className="bg-gradient-to-br from-emerald-800 via-teal-900 to-slate-950 text-white mx-4 sm:mx-6 lg:mx-8 mt-6 rounded-[2rem] shadow-2xl relative overflow-hidden">
         {/* Motif décoratif en filigrane */}

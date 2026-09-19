@@ -254,3 +254,72 @@ body {
   from { opacity: 0; transform: translateY(-8px); }
   to { opacity: 1; transform: translateY(0); }
 }
+
+/* ============================================
+   Dark Mode System (MSN / Twitter Sleek Dark)
+   ============================================ */
+
+html.dark {
+  color-scheme: dark;
+}
+
+html.dark body {
+  background: #090d16;
+  color: #e2e8f0;
+}
+
+html.dark .bg-white {
+  background-color: #111827 !important;
+  border-color: #1f293d !important;
+}
+
+html.dark .text-gray-900,
+html.dark .text-surface-900 {
+  color: #f8fafc !important;
+}
+
+html.dark .text-gray-700,
+html.dark .text-gray-600,
+html.dark .text-surface-700,
+html.dark .text-surface-600 {
+  color: #94a3b8 !important;
+}
+
+html.dark .border-gray-200,
+html.dark .border-surface-200,
+html.dark .border-gray-100 {
+  border-color: #1f293d !important;
+}
+
+html.dark .bg-gray-50,
+html.dark .bg-surface-50,
+html.dark .bg-surface-100 {
+  background-color: #162032 !important;
+}
+
+html.dark .prose-custom {
+  color: #cbd5e1;
+}
+
+html.dark .prose-custom h2,
+html.dark .prose-custom h3,
+html.dark .prose-custom strong {
+  color: #f1f5f9;
+}
+
+html.dark .prose-custom p,
+html.dark .prose-custom li {
+  color: #cbd5e1;
+}
+
+html.dark ::-webkit-scrollbar-track {
+  background: #0b0f19;
+}
+
+html.dark ::-webkit-scrollbar-thumb {
+  background: #1e293b;
+}
+
+html.dark ::-webkit-scrollbar-thumb:hover {
+  background: #334155;
+}

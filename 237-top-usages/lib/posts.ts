@@ -10,6 +10,7 @@ export type PostMeta = {
   date: string;
   category: string;
   tags: string[];
+  featured?: boolean;
   excerpt?: string;
   coverImage?: string;
   sourceName?: string;
@@ -55,6 +56,7 @@ export function getAllPosts(): PostMeta[] {
         date: data.date as string,
         category,
         tags: (data.tags as string[]) || [],
+        featured: Boolean(data.featured),
         coverImage,
         sourceName: (data.source_name as string) || "237 Top Usages",
         sourceUrl: (data.source_url as string) || undefined,
@@ -69,6 +71,50 @@ export function getAllPosts(): PostMeta[] {
 
 export function getSortedPosts(): PostMeta[] {
   return getAllPosts();
+}
+
+/**
+ * Algorithme de sélection automatique "À la une" :
+ * 1. Priorise les articles marqués 'featured: true'
+ * 2. Assure une diversité thématique (ex: 1 Foot/Sport + 1 Tech + 1 Eco/Énergie)
+ * 3. Complète par ordre chronologique décroissant
+ */
+export function getFeaturedPosts(limit: number = 3): PostMeta[] {
+  const all = getAllPosts();
+  if (all.length <= limit) return all;
+
+  const selected: PostMeta[] = [];
+  const seenCategories = new Set<string>();
+
+  // 1. Articles explicitement mis à la une
+  for (const post of all) {
+    if (post.featured) {
+      selected.push(post);
+      seenCategories.add(post.category);
+      if (selected.length >= limit) return selected;
+    }
+  }
+
+  // 2. Équilibrage thématique automatique (éviter la redondance)
+  for (const post of all) {
+    if (selected.length >= limit) break;
+    if (!selected.some((p) => p.slug === post.slug)) {
+      if (!seenCategories.has(post.category)) {
+        selected.push(post);
+        seenCategories.add(post.category);
+      }
+    }
+  }
+
+  // 3. Complément si nécessaire
+  for (const post of all) {
+    if (selected.length >= limit) break;
+    if (!selected.some((p) => p.slug === post.slug)) {
+      selected.push(post);
+    }
+  }
+
+  return selected.slice(0, limit);
 }
 
 export function getPostBySlug(slug: string): PostMeta | null {
@@ -90,6 +136,7 @@ export function getPostBySlug(slug: string): PostMeta | null {
     date: data.date as string,
     category,
     tags: (data.tags as string[]) || [],
+    featured: Boolean(data.featured),
     coverImage,
     sourceName: (data.source_name as string) || "237 Top Usages",
     sourceUrl: (data.source_url as string) || undefined,

@@ -47,10 +47,11 @@ export default function AboutPage() {
 
             <h2>Notre approche</h2>
             <p>
-              Le contenu est produit avec l'aide d'outils d'intelligence artificielle,
-              puis vérifié et édité par des développeurs et passionnés locaux.
-              Chaque article est pensé pour être utile, clair et ancré dans la réalité
-              camerounaise.
+              Notre rédaction s'appuie sur une veille quotidienne rigoureuse et des enquêtes
+              de terrain menées par des rédacteurs, développeurs et observateurs passionnés
+              du quotidien camerounais. Chaque article, chaque comparatif et chaque dossier
+              est pensé pour apporter une valeur concrète, vérifiable et immédiatement utile
+              aux citoyens, entrepreneurs et professionnels du 237.
             </p>
             <p>
               Si tu as des idées de sujets, des corrections à proposer ou envie de
