@@ -38,9 +38,9 @@ function timeAgo(dateString: string): string {
     if (diffMin < 2) return "À l'instant";
     if (diffMin < 60) return `Il y a ${diffMin} min`;
     const diffHours = Math.floor(diffMin / 60);
-    if (diffHours < 24) return `Il y a ${diffHours}h`;
+    if (diffHours < 24) return `Il y a ${diffHours} h`;
     const diffDays = Math.floor(diffHours / 24);
-    return `Il y a ${diffDays}j`;
+    return `Il y a ${diffDays} jour${diffDays > 1 ? 's' : ''}`;
   } catch {
     return "Récent";
   }
