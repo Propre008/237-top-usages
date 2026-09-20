@@ -263,6 +263,13 @@ html.dark {
   color-scheme: dark;
 }
 
+/* Transition de fond et de couleur douce pour basculement cinématique */
+body, header, nav, footer, button, .card-hover, article, aside, section {
+  transition: background-color 0.25s cubic-bezier(0.4, 0, 0.2, 1),
+              color 0.25s cubic-bezier(0.4, 0, 0.2, 1),
+              border-color 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
 html.dark body {
   background: #090d16;
   color: #e2e8f0;

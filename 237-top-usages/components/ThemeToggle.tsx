@@ -36,8 +36,52 @@ export default function ThemeToggle() {
     };
   }, []);
 
+  // Déclenchement d'un micro-son feutré (Web Audio API sans téléchargement externe)
+  const playMicroClick = (toDark: boolean) => {
+    try {
+      const AudioCtx = window.AudioContext || (window as unknown as { webkitAudioContext?: typeof AudioContext }).webkitAudioContext;
+      if (!AudioCtx) return;
+      const ctx = new AudioCtx();
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+
+      osc.type = "sine";
+      const startFreq = toDark ? 520 : 380;
+      const endFreq = toDark ? 360 : 540;
+
+      osc.frequency.setValueAtTime(startFreq, ctx.currentTime);
+      osc.frequency.exponentialRampToValueAtTime(endFreq, ctx.currentTime + 0.035);
+
+      // Volume très discret et court (effet micro-interrupteur soyeux)
+      gain.gain.setValueAtTime(0.035, ctx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + 0.035);
+
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+
+      osc.start();
+      osc.stop(ctx.currentTime + 0.04);
+    } catch {
+      // Silencieux si l'audio est bloqué
+    }
+  };
+
   const toggleTheme = () => {
     const isDark = document.documentElement.classList.contains("dark");
+    const nextDark = !isDark;
+
+    // Retour haptique doux sur mobile (10ms)
+    if (typeof navigator !== "undefined" && navigator.vibrate) {
+      try {
+        navigator.vibrate(10);
+      } catch {
+        // Ignorer si non supporté
+      }
+    }
+
+    // Micro-son ultra-subtil
+    playMicroClick(nextDark);
+
     if (isDark) {
       document.documentElement.classList.remove("dark");
       localStorage.setItem("theme", "light");
