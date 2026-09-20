@@ -61,6 +61,9 @@ export default function ThemeToggle() {
 
       osc.start();
       osc.stop(ctx.currentTime + 0.04);
+
+      // Libérer le contexte audio après la fin de l'oscillateur
+      osc.onended = () => ctx.close().catch(() => {});
     } catch {
       // Silencieux si l'audio est bloqué
     }

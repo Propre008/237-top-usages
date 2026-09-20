@@ -1,6 +1,9 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Outfit:wght@600;700;800;900&display=swap');
 @import "tailwindcss";
 
+/* Force Tailwind v4 à utiliser la stratégie de classe .dark (au lieu de @media prefers-color-scheme) */
+@custom-variant dark (&:where(.dark, .dark *));
+
 /* ============================================
    237 TOP USAGES — Design System Premium
    ============================================ */
@@ -138,6 +141,10 @@ body {
   box-shadow: 0 12px 32px rgba(0, 0, 0, 0.08), 0 4px 12px rgba(0, 0, 0, 0.04);
 }
 
+html.dark .card-hover:hover {
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.4), 0 4px 12px rgba(16, 185, 129, 0.06);
+}
+
 /* ============================================
    Tag Badge
    ============================================ */
@@ -155,6 +162,16 @@ body {
 
 .tag-badge:hover {
   background: #22c55e;
+  color: white;
+}
+
+html.dark .tag-badge {
+  background: #1a3a2a;
+  color: #86efac;
+}
+
+html.dark .tag-badge:hover {
+  background: #16a34a;
   color: white;
 }
 
@@ -263,8 +280,9 @@ html.dark {
   color-scheme: dark;
 }
 
-/* Transition de fond et de couleur douce pour basculement cinématique */
-body, header, nav, footer, button, .card-hover, article, aside, section {
+/* Transition de fond et de couleur douce pour basculement cinématique
+   Note : exclure <button> pour ne pas interférer avec active:scale-95 */
+body, header, nav, footer, main, .card-hover, article, aside, section, .glass-card {
   transition: background-color 0.25s cubic-bezier(0.4, 0, 0.2, 1),
               color 0.25s cubic-bezier(0.4, 0, 0.2, 1),
               border-color 0.25s cubic-bezier(0.4, 0, 0.2, 1);
